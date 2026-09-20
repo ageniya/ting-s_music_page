@@ -181,11 +181,11 @@ body::after {
 /* 编排控制台：让页头、曲库和工作区形成清晰的信息层级 */
 .atelier-strip {
     display: grid;
-    grid-template-columns: minmax(280px, 1fr) auto;
+    grid-template-columns: 1fr auto;
     align-items: center;
     gap: 18px 32px;
     margin: 0 var(--page-gutter, 40px);
-    padding: 30px 0 18px;
+    padding: 18px 0 16px;
     flex-shrink: 0;
     background: transparent;
     position: relative;
@@ -1683,15 +1683,7 @@ body.ambient-muted #particleCanvas {
 @media (max-width: 768px) {
     .music-page { --page-gutter: 16px; }
     body::after { inset: 6px; }
-    .atelier-strip {
-        display: block;
-        padding: 18px 0;
-    }
-    .atelier-intro { gap: 5px; }
-    .atelier-intro h1 { font-size: 1.45rem; }
-    .atelier-kicker { font-size: 0.65rem; }
-    .atelier-stats,
-    .atelier-actions { display: none; }
+    .atelier-strip { display: none; }
     .subtitle-detail { display: none; }
     .header-left { gap: 8px; }
     .header-right { flex-wrap: wrap; justify-content: flex-end; }
@@ -2168,6 +2160,7 @@ body.ambient-muted #particleCanvas {
     cursor: pointer;
     margin: 0 auto;
     border-radius: 4px;
+    touch-action: none;
 }
 
 /* --- 编辑器时间控制 --- */

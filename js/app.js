@@ -201,11 +201,29 @@ const AudioEditor = {
 
     _bindCanvasEvents() {
         const canvas = document.getElementById('editorCanvas');
-        canvas.onmousedown = (e) => this._onCanvasMouseDown(e);
-        canvas.onmousemove = (e) => this._onCanvasMouseMove(e);
-        canvas.onmouseup = () => { this._dragging = null; };
-        canvas.onmouseleave = () => { this._dragging = null; };
-        canvas.addEventListener('wheel', (e) => { e.preventDefault(); });
+        // Pointer Events 同时覆盖鼠标、触控板和手机触摸拖动。
+        canvas.addEventListener('pointerdown', (e) => {
+            e.preventDefault();
+            // 部分移动浏览器和嵌入式 WebView 不允许捕获合成指针，
+            // 捕获失败时仍可通过 window 事件完成拖动。
+            try { canvas.setPointerCapture(e.pointerId); } catch (_) { /* continue dragging */ }
+            this._onCanvasMouseDown(e);
+        });
+        canvas.addEventListener('pointermove', (e) => {
+            if (!this._dragging) return;
+            e.preventDefault();
+            this._onCanvasMouseMove(e);
+        });
+        const endPointerDrag = (e) => {
+            this._dragging = null;
+            try {
+                if (canvas.hasPointerCapture(e.pointerId)) canvas.releasePointerCapture(e.pointerId);
+            } catch (_) { /* no capture to release */ }
+        };
+        canvas.addEventListener('pointerup', endPointerDrag);
+        canvas.addEventListener('pointercancel', endPointerDrag);
+        canvas.addEventListener('lostpointercapture', () => { this._dragging = null; });
+        canvas.addEventListener('wheel', (e) => { e.preventDefault(); }, { passive: false });
     },
 
     _onCanvasMouseDown(e) {
@@ -818,7 +836,6 @@ const App = {
         document.getElementById('btnRandomSong').addEventListener('click', () => this._playRandomSong());
         document.getElementById('btnAmbient').addEventListener('click', () => this._toggleAmbient());
         document.getElementById('btnToggleFolders').addEventListener('click', () => this._toggleFolders());
-        document.getElementById('btnFocusWorkspace').addEventListener('click', () => this._focusWorkspace());
         // 导出信息
         document.getElementById('btnExportPlaylist').addEventListener('click', () => this._exportWorkspaceInfo());
 
