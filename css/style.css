@@ -1,6 +1,6 @@
 /* ============================================
    MusicBox - 音乐库 & 歌单制作
-   现代化暗色主题设计
+   主页面：象牙纸色、香槟金与玉石边饰
    ============================================ */
 
 /* --- CSS 变量 --- */
@@ -35,6 +35,40 @@
     --display-font: Georgia, 'Times New Roman', 'Songti SC', serif;
 }
 
+/* 主页面单独配色，登录页继续使用原有变量。 */
+.music-page {
+    color-scheme: light;
+    --bg-primary: #f6f2e9;
+    --bg-secondary: #fffcf6;
+    --bg-tertiary: #eee8dc;
+    --bg-card: #fffdf8;
+    --bg-card-hover: #eee8dc;
+    --bg-input: #f9f6ef;
+    --text-primary: #2c342e;
+    --text-secondary: #545b51;
+    --text-muted: #716b5e;
+    --accent: #846431;
+    --accent-light: #785d30;
+    --accent-dark: #695027;
+    --accent-glow: rgba(138, 106, 53, 0.14);
+    --success: #32664e;
+    --warning: #886015;
+    --danger: #a64235;
+    --danger-hover: #87362c;
+    --border: #ded5c5;
+    --border-light: #b7a787;
+    --button-bg: #234d3e;
+    --button-hover: #183e31;
+    --button-text: #fffaf0;
+    --radius-sm: 7px;
+    --radius: 12px;
+    --shadow-sm: 0 2px 5px rgba(76, 61, 34, 0.04);
+    --shadow: 0 8px 24px rgba(76, 61, 34, 0.05);
+    --shadow-lg: 0 18px 56px rgba(76, 61, 34, 0.16);
+    --page-gutter: clamp(20px, 3.5vw, 64px);
+    --display-font: 'Songti SC', 'Noto Serif CJK SC', 'Source Han Serif SC', 'SimSun', Georgia, serif;
+}
+
 /* --- 全局重置 --- */
 *, *::before, *::after {
     margin: 0;
@@ -50,7 +84,7 @@ html {
 
 body {
     font-family: var(--font);
-    background: #171411;
+    background: var(--bg-primary);
     color: var(--text-primary);
     height: 100vh;
     height: 100dvh;
@@ -59,27 +93,16 @@ body {
     overflow: hidden;
 }
 
-/* 深翡翠、浅玉石与香槟金组成的婚礼舞台背景 */
+/* 背景边框留出呼吸空间，弧线由独立 SVG 绘制。 */
 body::before {
-    content: '';
-    position: fixed;
-    inset: 0;
-    display: block;
-    background:
-        linear-gradient(135deg, rgba(22, 73, 57, 0.38) 0 13%, transparent 13% 80%, rgba(22, 73, 57, 0.34) 80% 100%),
-        linear-gradient(315deg, rgba(210, 220, 196, 0.07) 0 11%, transparent 11% 88%, rgba(210, 220, 196, 0.07) 88% 100%),
-        repeating-linear-gradient(115deg, rgba(244, 225, 174, 0.018) 0 1px, transparent 1px 12px),
-        linear-gradient(90deg, transparent 0 7.4%, rgba(216, 181, 106, 0.2) 7.4% 7.46%, transparent 7.46% 100%);
-    opacity: 0.9;
-    pointer-events: none;
-    z-index: 0;
+    content: none;
 }
 
 body::after {
     content: '';
     position: fixed;
-    inset: 14px;
-    border: 1px solid rgba(216, 181, 106, 0.24);
+    inset: 12px;
+    border: 1px solid rgba(138, 106, 53, 0.16);
     pointer-events: none;
     z-index: 0;
 }
@@ -104,22 +127,19 @@ body::after {
     display: flex;
     align-items: center;
     justify-content: space-between;
-    padding: 18px 40px;
-    background: #211d18;
-    border-bottom: 1px solid #604d35;
-    position: sticky;
-    top: 0;
+    margin: 0 var(--page-gutter, 40px);
+    padding: 18px 0;
+    min-height: 94px;
+    gap: 24px;
+    flex-shrink: 0;
+    background: transparent;
+    border-bottom: 1px solid var(--border);
+    position: relative;
     z-index: 100;
 }
 
 .header::after {
-    content: '';
-    position: absolute;
-    bottom: -2px;
-    left: 40px;
-    width: 190px;
-    height: 3px;
-    background: linear-gradient(90deg, #6fae8e 0 22%, #b9d7b9 22% 42%, #d8b56a 42% 63%, #f0d58e 63% 82%, #7eb69e 82% 100%);
+    content: none;
 }
 
 .header-left {
@@ -129,18 +149,27 @@ body::after {
 }
 
 .header-logo {
-    height: 128px;
+    height: 62px;
     width: auto;
     filter: none;
 }
 
 .subtitle {
-    font-size: 0.83rem;
-    color: #c5b596;
-    font-weight: 400;
-    letter-spacing: 0.03em;
-    padding-left: 16px;
-    border-left: 1px solid rgba(255, 255, 255, 0.1);
+    font-size: 0.95rem;
+    color: var(--text-primary);
+    font-weight: 500;
+    letter-spacing: 0.12em;
+    padding-left: 20px;
+    border-left: 1px solid var(--border-light);
+    white-space: nowrap;
+}
+
+.subtitle-detail {
+    display: block;
+    margin-top: 6px;
+    color: var(--text-muted);
+    font-size: 0.68rem;
+    letter-spacing: 0.05em;
 }
 
 .header-right {
@@ -152,60 +181,53 @@ body::after {
 /* 编排控制台：让页头、曲库和工作区形成清晰的信息层级 */
 .atelier-strip {
     display: grid;
-    grid-template-columns: minmax(300px, 1fr) auto;
+    grid-template-columns: minmax(280px, 1fr) auto;
     align-items: center;
-    gap: 28px;
-    margin: 10px 10px 0;
-    padding: 13px 22px;
-    background: #211d18;
-    border: 1px solid #604d35;
-    border-bottom-color: #92764d;
-    border-radius: 10px 10px 0 0;
+    gap: 18px 32px;
+    margin: 0 var(--page-gutter, 40px);
+    padding: 30px 0 18px;
+    flex-shrink: 0;
+    background: transparent;
     position: relative;
+    z-index: 3;
 }
 
 .atelier-strip::before {
-    content: '';
-    position: absolute;
-    top: -2px;
-    left: 22px;
-    right: 22px;
-    height: 2px;
-    background: linear-gradient(90deg, #6fae8e 0 18%, #b9d7b9 18% 36%, #d8b56a 36% 54%, #f0d58e 54% 72%, #7eb69e 72% 86%, #d8b56a 86% 100%);
-    pointer-events: none;
+    content: none;
 }
 
 .atelier-intro {
     display: flex;
     flex-direction: column;
-    gap: 3px;
+    gap: 10px;
 }
 
 .atelier-kicker {
-    color: var(--accent-light);
-    font-size: 0.58rem;
-    font-weight: 700;
-    letter-spacing: 0.22em;
+    color: var(--text-muted);
+    font-size: 0.73rem;
+    font-weight: 400;
+    letter-spacing: 0.14em;
 }
 
-.atelier-intro strong {
+.atelier-intro h1 {
     color: var(--text-primary);
     font-family: var(--display-font);
-    font-size: 1rem;
+    font-size: clamp(1.55rem, 2.5vw, 2.25rem);
     font-weight: 500;
-    letter-spacing: 0.12em;
+    letter-spacing: 0.06em;
+    line-height: 1.4;
 }
 
 .atelier-stats {
     display: flex;
-    justify-content: center;
+    justify-content: flex-end;
     gap: 0;
 }
 
 .atelier-stat {
-    min-width: 112px;
-    padding: 0 22px;
-    border-left: 1px solid #4d4439;
+    min-width: 106px;
+    padding: 0 24px;
+    border-left: 1px solid var(--border);
 }
 
 .atelier-stat:first-child { border-left: 0; }
@@ -213,14 +235,15 @@ body::after {
     display: block;
     margin-bottom: 2px;
     color: var(--text-muted);
-    font-size: 0.66rem;
+    font-size: 0.72rem;
     letter-spacing: 0.08em;
 }
 
 .atelier-stat strong {
-    color: var(--accent-light);
-    font-family: var(--display-font);
-    font-size: 1.15rem;
+    color: var(--text-primary);
+    font-family: Georgia, 'Times New Roman', serif;
+    font-size: 1.9rem;
+    font-variant-numeric: tabular-nums;
     font-weight: 500;
 }
 
@@ -233,6 +256,7 @@ body::after {
 
 .atelier-actions {
     display: flex;
+    grid-column: 1 / -1;
     gap: 8px;
     justify-content: flex-end;
     align-items: center;
@@ -242,9 +266,9 @@ body::after {
     display: inline-flex;
     align-items: center;
     gap: 5px;
-    margin-right: 5px;
+    margin-right: auto;
     color: var(--text-muted);
-    font-size: 0.68rem;
+    font-size: 0.73rem;
     letter-spacing: 0.08em;
 }
 
@@ -299,19 +323,19 @@ body.ambient-muted .atelier-wave i {
 
 .atelier-action {
     padding: 8px 12px;
-    border: 1px solid #806543;
+    border: 1px solid var(--border);
     border-radius: 6px;
     background: transparent;
     color: var(--text-secondary);
     cursor: pointer;
-    font: 500 0.72rem var(--font);
+    font: 500 0.75rem var(--font);
     white-space: nowrap;
     transition: background 0.2s, color 0.2s, border-color 0.2s, transform 0.2s;
 }
 
 .atelier-action:hover {
     border-color: var(--accent);
-    background: #3a3024;
+    background: var(--bg-card-hover);
     color: var(--accent-light);
     transform: translateY(-1px);
 }
@@ -326,13 +350,13 @@ body.ambient-muted .atelier-wave i {
 }
 
 @keyframes focusFlash {
-    0%, 100% { border-color: #806543; }
+    0%, 100% { border-color: var(--border); }
     35% { border-color: var(--accent-light); }
 }
 
 /* --- 按钮 --- */
 .btn {
-    padding: 10px 20px;
+    padding: 11px 18px;
     border: none;
     border-radius: 7px;
     font-size: 0.88rem;
@@ -352,24 +376,24 @@ body.ambient-muted .atelier-wave i {
 }
 
 .btn-primary {
-    background: var(--accent);
-    border: 1px solid var(--accent-light);
-    color: #17130d;
-    box-shadow: inset 0 1px 0 rgba(255, 247, 221, 0.42);
+    background: var(--button-bg, var(--accent));
+    border: 1px solid var(--button-bg, var(--accent));
+    color: var(--button-text, #17130d);
+    box-shadow: var(--shadow-sm);
 }
 .btn-primary:hover {
-    background: var(--accent-light);
-    box-shadow: inset 0 1px 0 rgba(255, 250, 230, 0.5);
+    background: var(--button-hover, var(--accent-light));
+    border-color: var(--button-hover, var(--accent-light));
     transform: translateY(-1px);
 }
 
 .btn-outline {
-    background: #2b251d;
-    color: #e0d1b5;
-    border: 1px solid #806543;
+    background: var(--bg-card);
+    color: var(--text-secondary);
+    border: 1px solid var(--border);
 }
 .btn-outline:hover {
-    background: #3a3024;
+    background: var(--bg-card-hover);
     color: var(--accent-light);
     border-color: var(--accent);
 }
@@ -382,7 +406,7 @@ body.ambient-muted .atelier-wave i {
 .btn-utility.is-active {
     border-color: var(--accent);
     color: var(--accent-light);
-    background: #2a251e;
+    background: var(--bg-tertiary);
 }
 
 .btn-small {
@@ -440,6 +464,8 @@ body.ambient-muted .atelier-wave i {
     overflow: hidden;
     position: relative;
     z-index: 1;
+    gap: 24px;
+    padding: 0 var(--page-gutter, 40px) 28px;
 }
 
 .panel {
@@ -447,30 +473,22 @@ body.ambient-muted .atelier-wave i {
     flex-direction: column;
     overflow: hidden;
     min-height: 0;
-    background: rgba(43, 37, 29, 0.94);
-    border: 1px solid #806543;
+    background: rgba(255, 253, 248, 0.93);
+    border: 1px solid var(--border);
     border-radius: 12px;
-    margin: 10px;
-    box-shadow: 0 12px 26px rgba(20, 13, 8, 0.22);
+    margin: 0;
+    box-shadow: var(--shadow);
     position: relative;
     transition: transform 0.25s ease, border-color 0.25s ease, box-shadow 0.25s ease;
 }
 
 .panel:hover {
-    transform: translateY(-2px);
-    border-color: #f0d28d;
-    box-shadow: 0 16px 30px rgba(1, 6, 20, 0.4);
+    border-color: var(--border-light);
 }
 
 /* 面板顶部黄铜饰线 */
 .panel::before {
-    content: '';
-    position: absolute;
-    top: -2px; left: 24px; right: 24px;
-    height: 3px;
-    background: linear-gradient(90deg, transparent 0 8%, #6fae8e 8% 22%, #b9d7b9 22% 38%, #d8b56a 38% 53%, #f0d58e 53% 68%, #7eb69e 68% 82%, #d8b56a 82% 92%, transparent 92% 100%);
-    z-index: 2;
-    pointer-events: none;
+    content: none;
 }
 
 /* 旧版漂浮音符容器：保留结构，但不再生成高干扰 emoji 元素 */
@@ -490,7 +508,7 @@ body.ambient-muted .atelier-wave i {
 }
 
 body.ambient-muted #particleCanvas {
-    opacity: 0.04;
+    opacity: 0;
 }
 
 @keyframes floatRandom {
@@ -502,32 +520,21 @@ body.ambient-muted #particleCanvas {
 }
 
 .panel-library {
-    flex: 1;
-    min-width: 360px;
-    max-width: 520px;
+    flex: 0 0 34%;
+    min-width: 310px;
+    max-width: 460px;
 }
 
 .panel-playlist {
     flex: 1;
-    min-width: 360px;
+    min-width: 0;
     position: relative;
 }
 
 /* 面板右上黄铜角标 */
 .panel-library::after,
 .panel-playlist::after {
-    content: '';
-    position: absolute;
-    top: 14px;
-    right: 14px;
-    width: 14px;
-    height: 14px;
-    border-top: 1px solid rgba(116, 192, 255, 0.58);
-    border-right: 1px solid rgba(116, 192, 255, 0.58);
-    background: none;
-    opacity: 1;
-    pointer-events: none;
-    z-index: 3;
+    content: none;
 }
 
 .panel-playlist > * {
@@ -535,36 +542,49 @@ body.ambient-muted #particleCanvas {
     z-index: 1;
 }
 
-/* 工作区空状态 — 文字放顶部，不挡 logo */
+/* 空状态作为歌单纸页的中心，随列表高度自适应。 */
 .playlist-list .empty-state {
-    justify-content: flex-start;
-    padding-top: 80px;
+    justify-content: center;
+    padding: 24px;
+    min-height: 190px;
     gap: 8px;
 }
 
 .playlist-list .empty-icon {
-    font-size: 2.4rem;
-    margin-bottom: 8px;
-    opacity: 0.4;
+    font-size: 0;
+    width: 64px;
+    height: 64px;
+    border: 1px solid var(--border-light);
+    border-radius: 50%;
+    display: grid;
+    place-items: center;
+    margin-bottom: 12px;
+    opacity: 1;
+    color: var(--accent);
+    background: var(--bg-input);
+}
+
+.playlist-list .empty-icon::before {
+    content: '♫';
+    font: 32px Georgia, serif;
 }
 
 .playlist-list .empty-state p {
-    font-size: 0.9rem;
-    color: rgba(255, 255, 255, 0.3);
+    font-size: 1.05rem;
+    font-family: var(--display-font);
+    color: var(--text-secondary);
 }
 
 .playlist-list .empty-hint {
     font-size: 0.8rem !important;
-    color: rgba(255, 255, 255, 0.18) !important;
+    color: var(--text-muted) !important;
+    font-family: var(--font);
+    line-height: 1.8;
     opacity: 1;
 }
 
 .divider {
-    width: 1px;
-    background: #594637;
-    flex-shrink: 0;
-    margin: 8px 0;
-    border-radius: 1px;
+    display: none;
 }
 
 /* --- 面板头部 --- */
@@ -572,8 +592,8 @@ body.ambient-muted #particleCanvas {
     display: flex;
     align-items: center;
     justify-content: space-between;
-    padding: 21px 24px 15px;
-    border-bottom: 1px solid rgba(232, 203, 139, 0.08);
+    padding: 22px 24px 18px;
+    border-bottom: 1px solid var(--border);
     flex-shrink: 0;
 }
 
@@ -582,8 +602,8 @@ body.ambient-muted #particleCanvas {
     display: flex;
     align-items: baseline;
     gap: 10px;
-    font-size: 1.1rem;
-    font-weight: 600;
+    font-size: 1.15rem;
+    font-weight: 500;
     color: var(--text-primary);
     letter-spacing: 0.07em;
 }
@@ -599,10 +619,12 @@ body.ambient-muted #particleCanvas {
 .song-count {
     font-size: 0.78rem;
     color: var(--text-muted);
-    background: #211d18;
-    padding: 5px 14px;
+    background: var(--bg-input);
+    padding: 4px 10px;
     border-radius: 20px;
-    border: 1px solid #806543;
+    border: 1px solid var(--border);
+    white-space: nowrap;
+    font-variant-numeric: tabular-nums;
 }
 
 .playlist-actions {
@@ -613,7 +635,7 @@ body.ambient-muted #particleCanvas {
 
 /* --- 搜索与筛选 --- */
 .search-box {
-    padding: 0 22px 10px;
+    padding: 16px 20px 10px;
     flex-shrink: 0;
 }
 
@@ -672,11 +694,12 @@ body.ambient-muted #particleCanvas {
 
 .library-contact {
     flex-shrink: 0;
-    padding: 9px 16px 12px;
-    border-top: 1px solid rgba(255, 255, 255, 0.06);
+    padding: 13px 18px;
+    border-top: 1px solid var(--border);
+    background: var(--bg-input);
     color: var(--text-muted);
     font-size: 0.75rem;
-    line-height: 1.4;
+    line-height: 1.7;
     text-align: center;
 }
 
@@ -696,14 +719,14 @@ body.ambient-muted #particleCanvas {
 }
 
 .folder-group {
-    margin-bottom: 2px;
+    margin-bottom: 8px;
 }
 
 .folder-header {
     display: flex;
     align-items: center;
     gap: 8px;
-    padding: 8px 10px;
+    padding: 11px 10px;
     border-radius: var(--radius-sm);
     cursor: pointer;
     user-select: none;
@@ -714,7 +737,7 @@ body.ambient-muted #particleCanvas {
 }
 
 .folder-header:hover {
-    background: rgba(255, 255, 255, 0.04);
+    background: var(--bg-card-hover);
 }
 
 .folder-arrow {
@@ -730,7 +753,26 @@ body.ambient-muted #particleCanvas {
 }
 
 .folder-icon {
-    font-size: 0.95rem;
+    font-size: 0;
+    flex-shrink: 0;
+    width: 16px;
+    height: 12px;
+    border: 1px solid var(--accent);
+    border-radius: 2px;
+    position: relative;
+    background: rgba(138, 106, 53, 0.06);
+}
+
+.folder-icon::before {
+    content: '';
+    position: absolute;
+    left: 1px;
+    top: -4px;
+    width: 7px;
+    height: 3px;
+    border: 1px solid var(--accent);
+    border-bottom: 0;
+    border-radius: 2px 2px 0 0;
 }
 
 .folder-count {
@@ -765,7 +807,7 @@ body.ambient-muted #particleCanvas {
 
 /* 树中的歌曲卡片缩小 */
 .folder-children .song-card {
-    padding: 6px 10px;
+    padding: 8px 10px;
     margin-left: 4px;
     border-radius: 8px;
     gap: 8px;
@@ -841,10 +883,8 @@ body.ambient-muted #particleCanvas {
     user-select: none;
 }
 .song-card:hover {
-    background: rgba(255, 255, 255, 0.04);
-    border-color: rgba(255, 255, 255, 0.06);
-    box-shadow: 0 2px 12px rgba(0, 0, 0, 0.2);
-    transform: translateY(-1px);
+    background: var(--bg-card-hover);
+    border-color: var(--border);
 }
 .song-card:active {
     transform: scale(0.995);
@@ -872,6 +912,12 @@ body.ambient-muted #particleCanvas {
     flex-shrink: 0;
     background: var(--bg-tertiary);
     overflow: hidden;
+}
+
+/* 动态生成的音符沿用原 DOM，通过字体和灰阶降低 emoji 的视觉噪声。 */
+.music-page .song-cover {
+    filter: grayscale(1);
+    opacity: 0.75;
 }
 .song-cover img {
     width: 100%;
@@ -926,10 +972,10 @@ body.ambient-muted #particleCanvas {
     justify-content: center;
 }
 .btn-add:hover {
-    background: var(--accent);
-    border-color: var(--accent);
+    background: var(--button-bg, var(--accent));
+    border-color: var(--button-bg, var(--accent));
     color: #fff;
-    box-shadow: 0 0 12px var(--accent-glow);
+    box-shadow: none;
 }
 
 .btn-del {
@@ -946,7 +992,7 @@ body.ambient-muted #particleCanvas {
     display: flex;
     align-items: center;
     justify-content: center;
-    opacity: 0.35;
+    opacity: 0.7;
 }
 .btn-del:hover {
     background: rgba(248, 113, 113, 0.15);
@@ -996,17 +1042,24 @@ body.ambient-muted #particleCanvas {
 
 /* --- 歌单名称 --- */
 .playlist-name-row {
-    padding: 0 22px 8px;
+    padding: 18px 24px 14px;
     flex-shrink: 0;
+}
+.playlist-name-row label {
+    display: block;
+    margin-bottom: 8px;
+    color: var(--text-muted);
+    font-size: 0.72rem;
+    letter-spacing: 0.08em;
 }
 .playlist-name-row input {
     width: 100%;
-    padding: 10px 16px;
+    padding: 12px 14px;
     border-radius: var(--radius-sm);
     border: 1px solid var(--border);
     background: var(--bg-input);
     color: var(--text-primary);
-    font-size: 1rem;
+    font-size: 1.1rem;
     font-weight: 500;
     font-family: var(--font);
     transition: all var(--transition);
@@ -1032,18 +1085,19 @@ body.ambient-muted #particleCanvas {
     flex-shrink: 0;
 }
 .audio-banner strong {
-    color: #fde68a;
+    color: var(--warning);
 }
 
 /* --- 歌单底部 --- */
 .playlist-footer {
     display: flex;
     gap: 8px;
-    padding: 12px 22px 16px;
+    padding: 16px 22px;
     flex-shrink: 0;
     border-top: 1px solid var(--border);
     align-items: center;
     flex-wrap: wrap;
+    background: var(--bg-input);
 }
 
 .saved-select {
@@ -1066,10 +1120,12 @@ body.ambient-muted #particleCanvas {
     align-items: center;
     gap: 16px;
     padding: 10px 24px;
-    background: #0d1426;
+    background: var(--bg-secondary);
     border-top: 1px solid var(--border);
     height: 64px;
     flex-shrink: 0;
+    position: relative;
+    z-index: 91;
 }
 
 /* --- 网页宠物 --- */
@@ -1495,10 +1551,8 @@ body.ambient-muted #particleCanvas {
     transform: translate(-50%, -50%);
     width: 320px;
     max-width: 85vw;
-    background: rgba(22, 22, 42, 0.95);
-    backdrop-filter: blur(16px);
-    -webkit-backdrop-filter: blur(16px);
-    border: 1px solid rgba(255, 255, 255, 0.1);
+    background: var(--bg-secondary);
+    border: 1px solid var(--border);
     border-radius: var(--radius);
     padding: 18px 22px;
     box-shadow: var(--shadow-lg);
@@ -1534,7 +1588,7 @@ body.ambient-muted #particleCanvas {
     width: 100%;
     height: 6px;
     border-radius: 3px;
-    background: rgba(255, 255, 255, 0.08);
+    background: var(--bg-tertiary);
     overflow: hidden;
 }
 
@@ -1610,9 +1664,41 @@ body.ambient-muted #particleCanvas {
 }
 
 /* --- 响应式 --- */
+@media (min-width: 769px) and (max-width: 1100px) {
+    .header-left { gap: 10px; }
+    .header-right { gap: 6px; }
+    .header-right .btn { padding: 10px 12px; font-size: 0.78rem; }
+    .subtitle { padding-left: 12px; font-size: 0.85rem; }
+    .main-container { gap: 16px; }
+    .panel-library { min-width: 290px; }
+    .panel-header { padding: 18px 16px 14px; }
+    .panel-header h2 { font-size: 1rem; gap: 7px; }
+    .playlist-actions { gap: 5px; }
+    .song-count { padding: 4px 8px; }
+    .atelier-stat { padding: 0 16px; min-width: 88px; }
+    .playlist-footer { padding: 12px 16px; }
+    .playlist-footer .btn { padding: 10px 12px; font-size: 0.8rem; }
+}
+
 @media (max-width: 768px) {
+    .music-page { --page-gutter: 16px; }
+    body::after { inset: 6px; }
     .atelier-strip {
-        display: none;
+        display: block;
+        padding: 18px 0;
+    }
+    .atelier-intro { gap: 5px; }
+    .atelier-intro h1 { font-size: 1.45rem; }
+    .atelier-kicker { font-size: 0.65rem; }
+    .atelier-stats,
+    .atelier-actions { display: none; }
+    .subtitle-detail { display: none; }
+    .header-left { gap: 8px; }
+    .header-right { flex-wrap: wrap; justify-content: flex-end; }
+    .header-right #btnAmbient {
+        display: inline-flex;
+        padding: 6px 8px;
+        font-size: 0.68rem;
     }
     body {
         overflow: hidden;
@@ -1620,21 +1706,23 @@ body.ambient-muted #particleCanvas {
         height: 100dvh;
     }
     .header {
-        padding: 10px 12px;
+        padding: 12px 0;
         flex-shrink: 0;
+        min-height: 76px;
+        gap: 10px;
     }
     .header-logo {
-        height: 36px;
+        height: 44px;
     }
     .subtitle {
         display: none;
     }
     .header-right {
-        gap: 8px;
+        gap: 6px;
     }
     .header-right .btn {
-        padding: 9px 12px;
-        font-size: 0.8rem;
+        padding: 9px 10px;
+        font-size: 0.73rem;
         border-radius: 8px;
     }
     .header-right .btn-utility {
@@ -1645,15 +1733,16 @@ body.ambient-muted #particleCanvas {
         flex: 1;
         min-height: 0;
         height: auto;
-        padding: 0;
+        padding: 0 12px 12px;
+        gap: 0;
     }
 
     /* 底部 Tab 栏 */
     .mobile-tabs {
         display: flex;
         flex-shrink: 0;
-        background: #211d18;
-        border-top: 1px solid #604d35;
+        background: var(--bg-secondary);
+        border-top: 1px solid var(--border);
         padding-bottom: env(safe-area-inset-bottom);
         z-index: 90;
     }
@@ -1707,13 +1796,15 @@ body.ambient-muted #particleCanvas {
     /* 面板：一次只显示一个，占满可用空间 */
     .panel {
         display: none;
-        margin: 6px;
+        margin: 0;
         min-height: 0;
-        border-radius: 16px;
+        border-radius: 10px;
     }
     .panel.active {
         display: flex;
-        flex: 1;
+        flex: 1 1 0px;
+        align-self: stretch;
+        max-height: none;
     }
     .panel-library,
     .panel-playlist {
@@ -1731,10 +1822,10 @@ body.ambient-muted #particleCanvas {
         padding: 14px 14px 10px;
     }
     .search-box {
-        padding: 0 12px 10px;
+        padding: 12px 12px 8px;
     }
     .playlist-name-row {
-        padding: 0 12px 8px;
+        padding: 12px 12px 8px;
     }
     .folder-tree {
         padding: 4px 6px 14px;
@@ -1812,7 +1903,7 @@ body.ambient-muted #particleCanvas {
         height: auto;
         padding: 8px 12px calc(8px + env(safe-area-inset-bottom));
         gap: 6px 10px;
-        background: #10151c;
+        background: var(--bg-secondary);
     }
     .web-pet {
         right: 4px;
@@ -1891,6 +1982,38 @@ body.ambient-muted #particleCanvas {
     .editor-row label {
         min-width: 0;
     }
+    .playlist-actions { gap: 4px; }
+    .playlist-actions .song-count { padding: 4px 7px; font-size: 0.7rem; }
+    .playlist-actions .btn-small { padding: 7px; }
+    .panel-header h2 { font-size: 1rem; gap: 7px; }
+    .library-contact { font-size: 0.7rem; padding: 10px 12px; }
+    .music-page .btn-icon-mini {
+        width: 40px;
+        height: 40px;
+    }
+}
+
+@media (max-width: 380px) {
+    .header-right { gap: 4px; }
+    .header-right .btn { padding-inline: 7px; }
+    .header-logo { height: 36px; }
+    .panel-header { padding-inline: 10px; }
+    .section-index { display: none; }
+}
+
+/* 低矮视口优先保证曲库和歌单的滚动区域。 */
+@media (max-height: 720px) and (min-width: 769px) {
+    .header { min-height: 74px; padding-block: 10px; }
+    .header-logo { height: 50px; }
+    .atelier-strip { padding-block: 16px 12px; gap: 10px 24px; }
+    .atelier-intro { gap: 4px; }
+    .atelier-intro h1 { font-size: 1.6rem; }
+    .main-container { padding-bottom: 18px; }
+}
+
+@media (max-height: 620px) and (max-width: 768px) {
+    .atelier-strip { display: none; }
+    .main-container { padding-top: 10px; }
 }
 
 /* ============================================
@@ -1963,20 +2086,24 @@ body.ambient-muted #particleCanvas {
 .drag-over-zone {
     outline: 2px dashed var(--accent) !important;
     outline-offset: -4px;
-    background: rgba(104, 169, 255, 0.08) !important;
+    background: var(--bg-tertiary) !important;
 }
 
 /* --- 音频编辑器模态框 --- */
 .editor-modal {
+    flex-direction: column;
     max-width: 720px;
     width: 95%;
+    max-height: calc(100vh - 32px);
+    max-height: calc(100dvh - 32px);
     padding: 0;
     overflow: hidden;
 }
 
 .editor-header {
-    padding: 20px 24px 12px;
+    padding: 20px 52px 12px 24px;
     border-bottom: 1px solid var(--border);
+    flex-shrink: 0;
 }
 .editor-header h2 {
     font-size: 1.2rem;
@@ -1988,10 +2115,14 @@ body.ambient-muted #particleCanvas {
     color: var(--text-muted);
     margin-top: 4px;
     display: block;
+    overflow-wrap: anywhere;
 }
 
 .editor-body {
     padding: 16px 24px 20px;
+    min-height: 0;
+    overflow-y: auto;
+    overscroll-behavior: contain;
 }
 
 .editor-row {
@@ -2042,6 +2173,7 @@ body.ambient-muted #particleCanvas {
 /* --- 编辑器时间控制 --- */
 .editor-time-controls {
     display: flex;
+    flex-wrap: wrap;
     align-items: flex-end;
     gap: 12px;
     margin: 12px 0;
@@ -2293,7 +2425,8 @@ body.ambient-muted #particleCanvas {
 /* --- 面板拖放区提示 --- */
 .panel-library {
     position: relative;
-    transition: all var(--transition);
+    /* 不对 flex/min-width 做过渡，避免手机切换视口时面板短暂缩成半屏。 */
+    transition: border-color var(--transition), background-color var(--transition);
 }
 .panel-library::after {
     content: '拖拽 MP3 文件到此处';
@@ -2304,12 +2437,12 @@ body.ambient-muted #particleCanvas {
     justify-content: center;
     font-size: 1.2rem;
     color: var(--accent-light);
-    background: rgba(124, 92, 252, 0.06);
+    background: var(--bg-secondary);
     opacity: 0;
     pointer-events: none;
     transition: opacity var(--transition);
     z-index: 10;
-    border: 2px dashed rgba(124, 92, 252, 0.3);
+    border: 2px dashed var(--accent);
     border-radius: var(--radius);
     margin: 8px;
 }
@@ -2329,7 +2462,7 @@ body.ambient-muted #particleCanvas {
     font-size: 0.4rem;
 }
 
-/* --- 背景流动线条：参考玉石/丝绸的弧线，但保持轻量和清晰 --- */
+/* 连续曲线和小面积玉石切面：完整轮廓缓慢漂移，不用虚线或模糊滤镜。 */
 .ambient-ribbons {
     position: fixed;
     inset: 0;
@@ -2337,52 +2470,74 @@ body.ambient-muted #particleCanvas {
     height: 100%;
     z-index: 0;
     pointer-events: none;
-    opacity: 0.58;
+    opacity: 1;
+    overflow: hidden;
 }
 
 .ambient-ribbon {
     fill: none;
-    stroke: #d8b56a;
-    stroke-width: 1.6;
+    stroke: #a7864e;
+    stroke-width: 1.15;
     stroke-linecap: round;
-    stroke-dasharray: 190 1050;
-    stroke-dashoffset: 0;
-    animation: ribbonFlow 22s linear infinite;
+    vector-effect: non-scaling-stroke;
 }
 
-.ribbon-top {
-    stroke: #e3c982;
+.ribbon-fine {
+    stroke: #c0a777;
+    stroke-width: 0.65;
 }
 
-.ribbon-top-thin,
-.ribbon-bottom-thin {
-    stroke: #c8d2b5;
-    stroke-width: 1;
-    stroke-dasharray: 120 820;
-    animation-duration: 28s;
-    animation-direction: reverse;
+.ribbon-wash {
+    fill: #dce3d8;
+    opacity: 0.75;
 }
 
-.ribbon-bottom {
-    stroke: #b99350;
-    animation-duration: 26s;
-    animation-direction: reverse;
+.ribbon-jade {
+    fill: #496759;
+    opacity: 0.24;
 }
 
-.ribbon-side {
-    stroke: #9cae91;
-    stroke-width: 1.2;
-    stroke-dasharray: 150 620;
-    animation-duration: 19s;
+.ribbon-drift {
+    transform-box: view-box;
+    transform-origin: center;
+    animation: ribbonFlow 24s ease-in-out infinite alternate;
 }
+
+.ribbon-drift-bottom { animation-duration: 31s; animation-delay: -9s; }
 
 @keyframes ribbonFlow {
-    from { stroke-dashoffset: 0; }
-    to { stroke-dashoffset: -1240px; }
+    from { transform: translate(-8px, -6px) rotate(-1deg); }
+    to { transform: translate(12px, 14px) rotate(1deg); }
+}
+
+body.ambient-muted .ribbon-drift,
+body.ambient-muted .atelier-live-dot {
+    animation-play-state: paused;
+}
+
+.music-page :is(button, input, select, a):focus-visible {
+    outline: 2px solid var(--button-bg);
+    outline-offset: 3px;
+}
+
+.music-page ::selection {
+    color: #183e31;
+    background: #ded8bb;
 }
 
 @media (prefers-reduced-motion: reduce) {
-    .ambient-ribbon {
-        animation-play-state: paused;
+    .music-page .ribbon-drift,
+    .music-page .atelier-live-dot,
+    .music-page .atelier-wave i,
+    .music-page .note-dynamic,
+    .music-page .panel.focus-flash {
+        animation: none;
+    }
+    .music-page :is(.btn, .atelier-action, .panel, .song-card, .toast, .modal) {
+        transition: none;
+        animation: none;
+    }
+    .music-page #particleCanvas {
+        transition: none;
     }
 }

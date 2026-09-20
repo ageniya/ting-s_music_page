@@ -101,12 +101,14 @@ const AudioEditor = {
         const H = this._canvasHeight;
         const dur = this._duration;
 
-        // 背景
-        ctx.fillStyle = '#12122a';
+        const theme = getComputedStyle(document.body);
+        const color = (name) => theme.getPropertyValue(name).trim();
+        // 编辑器与页面主题保持一致。
+        ctx.fillStyle = color('--bg-input');
         ctx.fillRect(0, 0, W, H);
 
         // 网格线
-        ctx.strokeStyle = '#2a2a45';
+        ctx.strokeStyle = color('--border');
         ctx.lineWidth = 0.5;
         for (let t = 0; t <= dur; t += Math.max(1, Math.floor(dur / 10))) {
             const x = (t / dur) * W;
@@ -117,7 +119,7 @@ const AudioEditor = {
         }
 
         // 中轴线
-        ctx.strokeStyle = '#35355a';
+        ctx.strokeStyle = color('--border-light');
         ctx.beginPath();
         ctx.moveTo(0, H / 2);
         ctx.lineTo(W, H / 2);
@@ -127,15 +129,15 @@ const AudioEditor = {
         const endX = (this._trimEnd / dur) * W;
 
         // 未选中区域波形（灰色）
-        this._drawPeaksRegion(ctx, 0, startX, '#3a3a55', W, H);
-        this._drawPeaksRegion(ctx, endX, W, '#3a3a55', W, H);
+        this._drawPeaksRegion(ctx, 0, startX, color('--text-muted'), W, H);
+        this._drawPeaksRegion(ctx, endX, W, color('--text-muted'), W, H);
 
         // 选中区域背景
-        ctx.fillStyle = 'rgba(124, 92, 252, 0.12)';
+        ctx.fillStyle = color('--accent-glow');
         ctx.fillRect(startX, 0, endX - startX, H);
 
         // 选中区域波形（亮色）
-        this._drawPeaksRegion(ctx, startX, endX, '#9b7fff', W, H);
+        this._drawPeaksRegion(ctx, startX, endX, color('--accent-dark'), W, H);
 
         // 播放头
         if (playheadPos >= 0) {
@@ -153,7 +155,7 @@ const AudioEditor = {
         this._drawHandle(ctx, endX, H, '#f87171', '⏹');
 
         // 时间刻度
-        ctx.fillStyle = '#6a6a82';
+        ctx.fillStyle = color('--text-muted');
         ctx.font = '10px system-ui';
         for (let t = 0; t <= dur; t += Math.max(1, Math.floor(dur / 8))) {
             const x = (t / dur) * W;
@@ -507,10 +509,13 @@ const ParticleBg = {
     _particles: [],
     _animId: null,
     _onResize: null,
+    _motionQuery: null,
+    _onMotionChange: null,
+    _lastFrame: null,
 
     start() {
         // 页面热更新或重复初始化时，停止旧实例，避免叠加多个 canvas 和粒子群。
-        if (this._animId) return;
+        if (this._canvas) return;
         if (window.__musicParticleBgStop) window.__musicParticleBgStop();
         window.__musicParticleBgStop = () => this.stop();
         const existingCanvas = document.getElementById('particleCanvas');
@@ -524,22 +529,20 @@ const ParticleBg = {
         document.body.prepend(this._canvas);
         this._ctx = this._canvas.getContext('2d');
         this._resize();
-        this._onResize = () => this._resize();
+        this._onResize = () => {
+            this._resize();
+            if (this._motionQuery && this._motionQuery.matches) this._animate();
+        };
         window.addEventListener('resize', this._onResize);
 
-        // 翡翠、玉石、香槟金与少量珊瑚色组成的现场亮点色谱。
+        // 浅香槟底上的金色与灰玉色细点。
         this._particles = [];
         const count = window.innerWidth < 768 ? 16 : 36;
         const colors = [
-            '255, 248, 225', // 奶油白
-            '234, 201, 136', // 香槟金
-            '255, 224, 165', // 浅金
-            '226, 217, 190', // 象牙色
-            '150, 189, 163', // 灰绿
-            '83, 144, 119',  // 深青绿
-            '235, 145, 117', // 珊瑚橙
-            '204, 133, 142', // 玫瑰灰
-            '163, 183, 222', // 少量冷色平衡
+            '173, 133, 65',
+            '197, 165, 105',
+            '214, 187, 133',
+            '152, 170, 151',
         ];
         for (let i = 0; i < count; i++) {
             const isLarge = Math.random() < 0.16;
@@ -554,6 +557,14 @@ const ParticleBg = {
                 color: colors[Math.floor(Math.random() * colors.length)],
             });
         }
+        this._motionQuery = window.matchMedia('(prefers-reduced-motion: reduce)');
+        this._onMotionChange = () => {
+            if (this._animId) cancelAnimationFrame(this._animId);
+            this._animId = null;
+            this._lastFrame = null;
+            this._animate();
+        };
+        this._motionQuery.addEventListener('change', this._onMotionChange);
         this._animate();
     },
 
@@ -562,16 +573,20 @@ const ParticleBg = {
         this._canvas.height = window.innerHeight;
     },
 
-    _animate() {
-        this._animId = requestAnimationFrame(() => this._animate());
+    _animate(timestamp = performance.now()) {
+        const reduced = this._motionQuery.matches;
+        const elapsed = this._lastFrame === null ? 0 : Math.min(50, timestamp - this._lastFrame);
+        this._lastFrame = timestamp;
+        const step = reduced || document.body.classList.contains('ambient-muted') ? 0 : elapsed / (1000 / 60);
+        if (!reduced) this._animId = requestAnimationFrame(time => this._animate(time));
         const ctx = this._ctx;
         const W = this._canvas.width;
         const H = this._canvas.height;
         ctx.clearRect(0, 0, W, H);
 
         for (const p of this._particles) {
-            p.y += p.vy;
-            p.pulse += p.pulseSpeed;
+            p.y += p.vy * step;
+            p.pulse += p.pulseSpeed * step;
             if (p.y < -18) {
                 p.y = H + 18;
                 p.x = Math.random() * W;
@@ -590,12 +605,16 @@ const ParticleBg = {
 
     stop() {
         if (this._animId) cancelAnimationFrame(this._animId);
+        if (this._motionQuery && this._onMotionChange) this._motionQuery.removeEventListener('change', this._onMotionChange);
         if (this._onResize) window.removeEventListener('resize', this._onResize);
         if (this._canvas) this._canvas.remove();
         this._animId = null;
         this._canvas = null;
         this._ctx = null;
         this._onResize = null;
+        this._motionQuery = null;
+        this._onMotionChange = null;
+        this._lastFrame = null;
     },
 };
 
@@ -1436,7 +1455,7 @@ const App = {
         const button = document.getElementById('btnAmbient');
         button.classList.toggle('is-active', !muted);
         button.setAttribute('aria-pressed', String(!muted));
-        this._toast(muted ? '背景亮点已隐藏' : '背景亮点已开启');
+        this._toast(muted ? '动态氛围已关闭' : '动态氛围已开启');
     },
 
     _updateAtelierStats() {

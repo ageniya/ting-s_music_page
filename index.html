@@ -4,40 +4,50 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover">
     <title>TING · 婚礼音乐库</title>
-    <link rel="stylesheet" href="css/style.css?v=20260902d">
+    <meta name="theme-color" content="#f6f2e9">
+    <link rel="stylesheet" href="css/style.css?v=20260920-ivory">
     <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&display=swap" rel="stylesheet">
 </head>
-<body>
+<body class="music-page">
     <!-- 浮动音符（JS 动态生成） -->
     <div class="floating-notes"></div>
 
     <!-- 背景流动线条：只做装饰，不参与页面交互 -->
-    <svg class="ambient-ribbons" viewBox="0 0 1440 900" preserveAspectRatio="none" aria-hidden="true">
-        <path class="ambient-ribbon ribbon-top" d="M-80 118 C170 -18 325 226 575 108 S1040 -25 1525 154"></path>
-        <path class="ambient-ribbon ribbon-top ribbon-top-thin" d="M-90 143 C165 18 315 248 590 130 S1055 15 1535 181"></path>
-        <path class="ambient-ribbon ribbon-bottom" d="M-90 790 C190 935 420 648 710 790 S1190 982 1535 688"></path>
-        <path class="ambient-ribbon ribbon-bottom ribbon-bottom-thin" d="M-80 817 C190 956 438 685 722 817 S1210 1002 1528 718"></path>
-        <path class="ambient-ribbon ribbon-side" d="M1485 194 C1265 310 1320 510 1515 626"></path>
+    <svg class="ambient-ribbons" viewBox="0 0 1440 900" preserveAspectRatio="none" aria-hidden="true" focusable="false">
+        <g class="ribbon-drift ribbon-drift-top">
+            <path class="ribbon-wash" d="M870 -80 C1030 54 1090 216 1270 206 S1440 156 1510 280 L1510 -80Z"/>
+            <path class="ribbon-jade" d="M1090 -80 C1140 42 1240 124 1370 100 S1450 104 1510 138 L1510 -80Z"/>
+            <path class="ambient-ribbon" d="M790 -70 C1050 40 1050 256 1290 232 S1450 188 1530 312"/>
+            <path class="ambient-ribbon ribbon-fine" d="M830 -80 C1060 44 1065 278 1300 251 S1470 217 1530 341"/>
+            <path class="ambient-ribbon ribbon-fine" d="M900 -90 C1070 24 1125 220 1310 206 S1470 162 1540 266"/>
+        </g>
+        <g class="ribbon-drift ribbon-drift-bottom">
+            <path class="ribbon-wash" d="M-90 550 C80 568 10 780 250 831 S422 887 520 980 L-90 980Z"/>
+            <path class="ribbon-jade" d="M-90 750 C32 772 120 878 264 911 L-90 980Z"/>
+            <path class="ambient-ribbon" d="M-70 508 C103 574 23 752 262 801 S432 906 602 950"/>
+            <path class="ambient-ribbon ribbon-fine" d="M-80 538 C85 587 8 778 250 820 S440 930 580 970"/>
+            <path class="ambient-ribbon ribbon-fine" d="M-70 597 C60 656 40 794 255 847 S421 946 560 991"/>
+        </g>
     </svg>
 
     <!-- 顶部导航 -->
     <header class="header">
         <div class="header-left">
-            <img src="images/logo-white.png" alt="TING" class="header-logo">
-            <span class="subtitle">婚礼音乐库 · BGM 管理 & 歌单制作</span>
+            <img src="images/logo-dark.png" alt="TING" class="header-logo">
+            <span class="subtitle">婚礼音乐库<span class="subtitle-detail">收藏音乐 · 编排仪式</span></span>
         </div>
         <div class="header-right">
             <button class="btn btn-outline btn-utility" id="btnRandomSong" type="button" title="从曲库随机试听一首">
                 ♬ 随机一首
             </button>
-            <button class="btn btn-outline btn-utility is-active" id="btnAmbient" type="button" title="显示或隐藏背景亮点" aria-pressed="true">
-                ✦ 氛围亮点
+            <button class="btn btn-outline btn-utility is-active" id="btnAmbient" type="button" title="动态氛围" aria-pressed="true">
+                ✦ 动态氛围
             </button>
             <button class="btn btn-primary" id="btnUpload" title="上传 MP3 文件">
-                📥 上传 MP3
+                <span aria-hidden="true">↑</span> 上传 MP3
             </button>
             <button class="btn btn-outline" id="btnExportZip" title="导出歌单为 ZIP 压缩包">
-                📦 导出 ZIP
+                <span aria-hidden="true">↓</span> 导出 ZIP
             </button>
         </div>
         <!-- 隐藏的文件上传 input -->
@@ -45,9 +55,13 @@
     </header>
 
     <section class="atelier-strip" aria-label="婚礼音乐编排控制台">
+        <div class="atelier-intro">
+            <p class="atelier-kicker">为重要的日子，留一段旋律</p>
+            <h1>让每一刻，都有回响。</h1>
+        </div>
         <div class="atelier-stats">
             <div class="atelier-stat">
-                <span>曲库收藏</span>
+                <span>珍藏音乐</span>
                 <strong id="atelierLibraryStat">0</strong><em>首</em>
             </div>
             <div class="atelier-stat">
@@ -55,7 +69,7 @@
                 <strong id="atelierWorkspaceStat">0</strong><em>首</em>
             </div>
             <div class="atelier-stat atelier-duration">
-                <span>仪式时长</span>
+                <span>歌单时长</span>
                 <strong id="atelierDurationStat">0:00</strong>
             </div>
         </div>
@@ -82,7 +96,7 @@
 
             <!-- 搜索 -->
             <div class="search-box">
-                <input type="text" id="searchInput" placeholder="🔍 搜索歌曲...">
+                <input type="search" id="searchInput" placeholder="搜索歌曲关键词…" aria-label="搜索歌曲关键词">
             </div>
 
             <!-- 文件夹树 -->
@@ -101,18 +115,19 @@
         <!-- 右侧：歌单制作区 -->
         <main class="panel panel-playlist" id="panelPlaylist">
             <div class="panel-header">
-                <h2><span class="section-index">02</span>我的工作区</h2>
+                <h2><span class="section-index">02</span>歌单编排</h2>
                 <div class="playlist-actions">
                     <span class="song-count" id="playlistCount">0 首</span>
                     <span class="song-count" id="playlistTotalDuration" title="总时长">0:00</span>
                     <button class="btn btn-small btn-danger" id="btnClearPlaylist" title="清空歌单">
-                        🗑️ 清空
+                        清空
                     </button>
                 </div>
             </div>
 
             <!-- 歌单名称 -->
             <div class="playlist-name-row">
+                <label for="playlistName">歌单名称</label>
                 <input type="text" id="playlistName" placeholder="输入歌单名称..." value="婚礼歌单">
             </div>
 
@@ -127,13 +142,13 @@
 
             <!-- 歌单操作 -->
             <div class="playlist-footer">
-                <button class="btn btn-primary" id="btnSavePlaylist">💾 保存歌单</button>
-                <button class="btn btn-outline" id="btnLoadPlaylist">📂 加载歌单</button>
-                <button class="btn btn-outline" id="btnExportPlaylist" title="导出歌单信息 JSON">📤 导出信息</button>
-                <select id="savedPlaylists" class="saved-select">
-                    <option value="">-- 已保存的歌单 --</option>
+                <button class="btn btn-primary" id="btnSavePlaylist">保存歌单</button>
+                <button class="btn btn-outline" id="btnLoadPlaylist">加载歌单</button>
+                <button class="btn btn-outline" id="btnExportPlaylist" title="导出歌单信息 JSON">导出信息</button>
+                <select id="savedPlaylists" class="saved-select" aria-label="选择已保存的歌单">
+                    <option value="">已保存的歌单</option>
                 </select>
-                <button class="btn btn-small btn-danger" id="btnDeleteSaved" title="删除选中的歌单">🗑️</button>
+                <button class="btn btn-small btn-danger" id="btnDeleteSaved" title="删除选中的歌单" aria-label="删除选中的歌单">×</button>
             </div>
         </main>
     </div>
@@ -248,7 +263,7 @@
         </div>
     </div>
     <script src="js/data.js?v=2"></script>
-    <script src="js/app.js?v=12"></script>
+    <script src="js/app.js?v=20260920-ivory"></script>
     <script src="js/web-pet-portrait.js?v=7"></script>
 
     <!-- 预设音乐库数据（内嵌，无需服务器） -->
