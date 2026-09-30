@@ -256,6 +256,7 @@ const Mp3Encoder = {
 
 const MusicData = {
     _songs: [],
+    STORAGE_KEY: 'musicbox_library_v3',
 
     async loadDefaultLibrary() {
         // 优先恢复本地曲库。上传、删除、重命名等操作都会保存完整曲库快照。
@@ -274,6 +275,8 @@ const MusicData = {
             if (el && el.textContent.trim()) {
                 const data = JSON.parse(el.textContent.trim());
                 this._songs = data.map((s, i) => this._normalizeSong(s, i));
+                this._mergeLegacyLocalLibrary();
+                this._saveToLocal();
                 console.log(`从内嵌数据加载了 ${this._songs.length} 首歌曲`);
                 return true;
             }
@@ -285,6 +288,8 @@ const MusicData = {
             if (resp.ok) {
                 const data = await resp.json();
                 this._songs = data.map((s, i) => this._normalizeSong(s, i));
+                this._mergeLegacyLocalLibrary();
+                this._saveToLocal();
                 return true;
             }
         } catch (e) { console.warn('加载音乐库失败:', e.message); }
@@ -546,19 +551,42 @@ const MusicData = {
                 _trimStart: s._trimStart, _trimEnd: s._trimEnd,
                 _fileName: s._fileName,
             }));
-            localStorage.setItem('musicbox_library_v2', JSON.stringify(meta));
+            localStorage.setItem(this.STORAGE_KEY, JSON.stringify(meta));
         } catch (e) { /* ignore */ }
     },
 
     _loadFromLocal() {
         try {
-            const data = localStorage.getItem('musicbox_library_v2');
+            const data = localStorage.getItem(this.STORAGE_KEY);
             if (data) {
                 this._songs = JSON.parse(data).map((s, i) => this._normalizeSong(s, i));
                 return true;
             }
         } catch (e) { /* ignore */ }
         return false;
+    },
+
+    _mergeLegacyLocalLibrary() {
+        try {
+            const data = localStorage.getItem('musicbox_library_v2');
+            if (!data) return;
+
+            const knownSources = new Set(this._songs.map(song => song.audioUrl || `id:${song.id}`));
+            const knownIds = new Set(this._songs.map(song => song.id));
+            const legacySongs = JSON.parse(data);
+            const additions = [];
+
+            for (const rawSong of legacySongs) {
+                const sourceKey = rawSong.audioUrl || `id:${rawSong.id}`;
+                if (knownSources.has(sourceKey)) continue;
+                const song = this._normalizeSong(rawSong, this._songs.length + additions.length);
+                if (knownIds.has(song.id)) song.id = `legacy_${Date.now()}_${additions.length}`;
+                knownSources.add(sourceKey);
+                knownIds.add(song.id);
+                additions.push(song);
+            }
+            this._songs.push(...additions);
+        } catch (e) { /* 旧缓存无效时直接使用线上默认曲库 */ }
     },
 
     _seedZzCeremonySongs() {
