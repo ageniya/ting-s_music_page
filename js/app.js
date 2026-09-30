@@ -1112,43 +1112,13 @@ const App = {
             this._toast('这首歌已在工作区中', 'error');
             return;
         }
-        if (this._loadingSongs.has(song.id)) {
-            this._toast('正在加载中，请稍候...', '');
-            return;
-        }
         if (!song.audioUrl) {
             this._toast('该歌曲没有音频文件', 'error');
             return;
         }
 
-        // 开始加载，显示进度条
-        this._loadingSongs.add(song.id);
-        this._showProgress(`正在加载：${song.title}`);
-
-        let buf = null;
-        if (FileStorage.has(song.id)) {
-            buf = FileStorage.getBuffer(song.id);
-            this._updateProgressBar(100);
-        } else {
-            buf = await MusicData._fetchAudioWithProgress(song.audioUrl, (pct) => {
-                this._updateProgressBar(pct);
-            });
-        }
-
-        this._loadingSongs.delete(song.id);
-        this._hideProgress();
-
-        if (!buf) {
-            this._toast(`加载失败：${song.title}`, 'error');
-            return;
-        }
-
-        // 存入内存
-        FileStorage.set(song.id, buf, song.audioUrl.split('/').pop(), 'audio/mpeg');
-        try { await MusicData._detectDuration(song.id); } catch (e) { /* skip */ }
-
-        // 加载完成 → 才加入工作区
-        const result = Workspace.addFromLibrary(song);
+        // 加入工作区不再等待整首 MP3 下载；播放时使用浏览器原生流式缓冲。
+        Workspace.addFromLibrary(song);
         this.renderWorkspace();
         this._toast(`✅ 已添加：${song.title}`, 'success');
     },
@@ -1518,12 +1488,32 @@ const App = {
     _playWorkspaceSong(wsId) {
         const item = Workspace.getById(wsId);
         if (!item) return;
-        const url = Workspace.getAudioUrl(item);
-        if (!url) { this._toast('音频未加载', 'error'); return; }
         const items = Workspace.getAll();
         this.player._wsPlaylist = items;
         this.player._wsIndex = items.findIndex(i => i.id === wsId);
-        this._loadAndPlayUrl(url, { title: item.title, artist: item.artist });
+        this._playWorkspaceItem(item);
+    },
+
+    _playWorkspaceItem(item) {
+        const cachedUrl = Workspace.getAudioUrl(item);
+        if (cachedUrl) {
+            this._loadAndPlayUrl(cachedUrl, { title: item.title, artist: item.artist });
+            return;
+        }
+        if (item.isTrimmed) {
+            this._toast('剪辑音频未缓存，请重新编辑该歌曲', 'error');
+            return;
+        }
+        const sourceSong = MusicData.getSongById(item.sourceId);
+        if (!sourceSong?.audioUrl) {
+            this._toast('该歌曲没有可播放的音频', 'error');
+            return;
+        }
+        this._loadAndPlayUrl(this._audioStreamUrl(sourceSong.audioUrl), sourceSong);
+    },
+
+    _audioStreamUrl(audioUrl) {
+        return audioUrl.split('/').map(part => encodeURIComponent(part)).join('/');
     },
 
     _loadAndPlay(song) {
@@ -1560,8 +1550,7 @@ const App = {
         const idx = (this.player._wsIndex - 1 + items.length) % items.length;
         this.player._wsIndex = idx;
         const item = items[idx];
-        const url = Workspace.getAudioUrl(item);
-        if (url) this._loadAndPlayUrl(url, { title: item.title, artist: item.artist });
+        this._playWorkspaceItem(item);
     },
 
     _next() {
@@ -1570,8 +1559,7 @@ const App = {
         const idx = (this.player._wsIndex + 1) % items.length;
         this.player._wsIndex = idx;
         const item = items[idx];
-        const url = Workspace.getAudioUrl(item);
-        if (url) this._loadAndPlayUrl(url, { title: item.title, artist: item.artist });
+        this._playWorkspaceItem(item);
     },
 
     _seek(percent) {
