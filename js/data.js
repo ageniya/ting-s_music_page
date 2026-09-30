@@ -261,6 +261,9 @@ const MusicData = {
         // 优先恢复本地曲库。上传、删除、重命名等操作都会保存完整曲库快照。
         // 这样刷新页面后不会被 HTML 内嵌的初始数据覆盖。
         if (this._loadFromLocal()) {
+            // 为已经使用过网页的浏览器补入本次新增的 Z&Z 仪式曲目。
+            // 标记只执行一次，之后用户自行删除的歌曲不会在每次刷新时被重新加回。
+            this._seedZzCeremonySongs();
             console.log(`从本地恢复了 ${this._songs.length} 首歌曲`);
             this._preloadAudioFiles();
             return true;
@@ -559,6 +562,27 @@ const MusicData = {
             }
         } catch (e) { /* ignore */ }
         return false;
+    },
+
+    _seedZzCeremonySongs() {
+        const migrationKey = 'musicbox_z_z_ceremony_seed_v1';
+        if (localStorage.getItem(migrationKey)) return;
+
+        try {
+            const text = document.getElementById('preset-songs')?.textContent?.trim();
+            const presets = text ? JSON.parse(text) : [];
+            const existingIds = new Set(this._songs.map(song => song.id));
+            const additions = presets
+                .filter(song => song.audioUrl?.startsWith('data/audio2/Z&Z/') && !existingIds.has(song.id))
+                .map((song, index) => this._normalizeSong(song, this._songs.length + index));
+
+            if (additions.length) {
+                this._songs.push(...additions);
+                this._saveToLocal();
+            }
+        } catch (e) { /* 下次启动时可再次尝试 */ }
+
+        localStorage.setItem(migrationKey, '1');
     },
 
     exportLibrary() {

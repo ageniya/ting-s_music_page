@@ -918,8 +918,8 @@ const App = {
                     tree[parent].songs.push(song);
                 }
             }
-            // 预留一个空的 D&L 文件夹，方便后续继续添加歌曲。
-            tree['D&L'] = { subs: {}, songs: [] };
+            // Z&Z 固定显示在曲库最后；即使暂时没有歌曲也保留入口。
+            if (!tree['Z&Z']) tree['Z&Z'] = { subs: {}, songs: [] };
         }
 
         if (Object.keys(tree).length === 0) {
@@ -1637,9 +1637,9 @@ const App = {
             if (parts[0]) set.add(parts[0]);
             if (parts.length > 2 && parts[1]) set.add(parts[0] + '/' + parts[1]);
         }
-        // D&L 没有歌曲时也要出现在上传目标列表，并固定放在最后。
-        set.add('D&L');
-        return [...set].filter(folder => folder !== 'D&L').sort().concat('D&L');
+        // Z&Z 始终出现在上传目标列表，并固定放在最后。
+        set.add('Z&Z');
+        return [...set].filter(folder => folder !== 'Z&Z').sort().concat('Z&Z');
     },
 
     // ==================== 工具 ====================
