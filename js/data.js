@@ -20,7 +20,8 @@ const FileStorage = {
 
             let req;
             try {
-                req = indexedDB.open('musicbox_audio', 1);
+                // 升级缓存版本时清除旧音频，避免旧编号命中到错误歌曲。
+                req = indexedDB.open('musicbox_audio', 2);
             } catch (e) {
                 clearTimeout(timeout);
                 resolve(); // IndexedDB 不可用，纯内存模式
@@ -31,6 +32,8 @@ const FileStorage = {
                 const db = req.result;
                 if (!db.objectStoreNames.contains('files')) {
                     db.createObjectStore('files', { keyPath: 'songId' });
+                } else {
+                    req.transaction.objectStore('files').clear();
                 }
             };
             req.onsuccess = () => {
