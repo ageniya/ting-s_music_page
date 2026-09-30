@@ -565,19 +565,23 @@ const MusicData = {
     },
 
     _seedZzCeremonySongs() {
-        const migrationKey = 'musicbox_z_z_ceremony_seed_v2';
-        if (localStorage.getItem(migrationKey)) return;
-
         try {
             const text = document.getElementById('preset-songs')?.textContent?.trim();
             const presets = text ? JSON.parse(text) : [];
-            // 清除上一版使用 s31～s46 的记录及音频缓存，避免和旧上传歌曲共用编号。
+            const expectedZzSongs = presets.filter(song => song.audioUrl?.startsWith('data/audio2/Z&Z/'));
             const previousZzSongs = this._songs.filter(song => song.audioUrl?.startsWith('data/audio2/Z&Z/'));
+            const currentIds = new Set(previousZzSongs.map(song => song.id));
+            const isCurrent = expectedZzSongs.length === previousZzSongs.length
+                && expectedZzSongs.every(song => currentIds.has(song.id));
+
+            // 没有 Z&Z、数量不对或仍是旧编号时，均自动修复本地曲库。
+            // 这样即使浏览器曾写入旧缓存，也能正常补齐这 16 首歌曲。
+            if (isCurrent) return;
+
             previousZzSongs.forEach(song => FileStorage.delete(song.id));
             this._songs = this._songs.filter(song => !song.audioUrl?.startsWith('data/audio2/Z&Z/'));
 
-            const additions = presets
-                .filter(song => song.audioUrl?.startsWith('data/audio2/Z&Z/'))
+            const additions = expectedZzSongs
                 .map((song, index) => this._normalizeSong(song, this._songs.length + index));
 
             if (additions.length > 0) {
@@ -585,8 +589,6 @@ const MusicData = {
                 this._saveToLocal();
             }
         } catch (e) { /* 下次启动时可再次尝试 */ }
-
-        localStorage.setItem(migrationKey, '1');
     },
 
     exportLibrary() {
