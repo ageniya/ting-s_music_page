@@ -790,6 +790,14 @@ body.ambient-muted #particleCanvas {
     display: block;
 }
 
+.folder-sub.open > .folder-children {
+    display: block;
+}
+
+.folder-sub.open > .folder-header .folder-arrow {
+    transform: rotate(90deg);
+}
+
 /* 子文件夹 */
 .folder-sub {
     margin-bottom: 1px;
