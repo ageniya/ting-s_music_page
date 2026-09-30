@@ -256,27 +256,15 @@ const Mp3Encoder = {
 
 const MusicData = {
     _songs: [],
-    STORAGE_KEY: 'musicbox_library_v3',
 
     async loadDefaultLibrary() {
-        // 优先恢复本地曲库。上传、删除、重命名等操作都会保存完整曲库快照。
-        // 这样刷新页面后不会被 HTML 内嵌的初始数据覆盖。
-        if (this._loadFromLocal()) {
-            // 为已经使用过网页的浏览器补入本次新增的 Z&Z 仪式曲目。
-            // 标记只执行一次，之后用户自行删除的歌曲不会在每次刷新时被重新加回。
-            this._seedZzCeremonySongs();
-            console.log(`从本地恢复了 ${this._songs.length} 首歌曲`);
-            return true;
-        }
-
+        // 曲库始终使用网页内置数据，保证所有设备看到完全一致的内容。
         // 1. 尝试从内嵌数据加载（file:// 兼容）
         try {
             const el = document.getElementById('preset-songs');
             if (el && el.textContent.trim()) {
                 const data = JSON.parse(el.textContent.trim());
                 this._songs = data.map((s, i) => this._normalizeSong(s, i));
-                this._mergeLegacyLocalLibrary();
-                this._saveToLocal();
                 console.log(`从内嵌数据加载了 ${this._songs.length} 首歌曲`);
                 return true;
             }
@@ -288,8 +276,6 @@ const MusicData = {
             if (resp.ok) {
                 const data = await resp.json();
                 this._songs = data.map((s, i) => this._normalizeSong(s, i));
-                this._mergeLegacyLocalLibrary();
-                this._saveToLocal();
                 return true;
             }
         } catch (e) { console.warn('加载音乐库失败:', e.message); }
@@ -539,81 +525,7 @@ const MusicData = {
     },
 
     _saveToLocal() {
-        try {
-            const meta = this._songs.map(s => ({
-                id: s.id, title: s.title, artist: s.artist, album: s.album,
-                genre: s.genre, scene: s.scene, cue: s.cue,
-                originalTitle: s.originalTitle, note: s.note,
-                duration: s.duration, durationStr: s.durationStr,
-                cover: s.cover, audioUrl: s.audioUrl, year: s.year,
-                _isUploaded: s._isUploaded, _isTrimmed: s._isTrimmed,
-                _originalId: s._originalId, _originalTitle: s._originalTitle,
-                _trimStart: s._trimStart, _trimEnd: s._trimEnd,
-                _fileName: s._fileName,
-            }));
-            localStorage.setItem(this.STORAGE_KEY, JSON.stringify(meta));
-        } catch (e) { /* ignore */ }
-    },
-
-    _loadFromLocal() {
-        try {
-            const data = localStorage.getItem(this.STORAGE_KEY);
-            if (data) {
-                this._songs = JSON.parse(data).map((s, i) => this._normalizeSong(s, i));
-                return true;
-            }
-        } catch (e) { /* ignore */ }
-        return false;
-    },
-
-    _mergeLegacyLocalLibrary() {
-        try {
-            const data = localStorage.getItem('musicbox_library_v2');
-            if (!data) return;
-
-            const knownSources = new Set(this._songs.map(song => song.audioUrl || `id:${song.id}`));
-            const knownIds = new Set(this._songs.map(song => song.id));
-            const legacySongs = JSON.parse(data);
-            const additions = [];
-
-            for (const rawSong of legacySongs) {
-                const sourceKey = rawSong.audioUrl || `id:${rawSong.id}`;
-                if (knownSources.has(sourceKey)) continue;
-                const song = this._normalizeSong(rawSong, this._songs.length + additions.length);
-                if (knownIds.has(song.id)) song.id = `legacy_${Date.now()}_${additions.length}`;
-                knownSources.add(sourceKey);
-                knownIds.add(song.id);
-                additions.push(song);
-            }
-            this._songs.push(...additions);
-        } catch (e) { /* 旧缓存无效时直接使用线上默认曲库 */ }
-    },
-
-    _seedZzCeremonySongs() {
-        try {
-            const text = document.getElementById('preset-songs')?.textContent?.trim();
-            const presets = text ? JSON.parse(text) : [];
-            const expectedZzSongs = presets.filter(song => song.audioUrl?.startsWith('data/audio2/Z&Z/'));
-            const previousZzSongs = this._songs.filter(song => song.audioUrl?.startsWith('data/audio2/Z&Z/'));
-            const currentIds = new Set(previousZzSongs.map(song => song.id));
-            const isCurrent = expectedZzSongs.length === previousZzSongs.length
-                && expectedZzSongs.every(song => currentIds.has(song.id));
-
-            // 没有 Z&Z、数量不对或仍是旧编号时，均自动修复本地曲库。
-            // 这样即使浏览器曾写入旧缓存，也能正常补齐这 16 首歌曲。
-            if (isCurrent) return;
-
-            previousZzSongs.forEach(song => FileStorage.delete(song.id));
-            this._songs = this._songs.filter(song => !song.audioUrl?.startsWith('data/audio2/Z&Z/'));
-
-            const additions = expectedZzSongs
-                .map((song, index) => this._normalizeSong(song, this._songs.length + index));
-
-            if (additions.length > 0) {
-                this._songs.push(...additions);
-                this._saveToLocal();
-            }
-        } catch (e) { /* 下次启动时可再次尝试 */ }
+        // 曲库仅在当前页面会话中更新；刷新页面即恢复网站统一曲库。
     },
 
     exportLibrary() {
