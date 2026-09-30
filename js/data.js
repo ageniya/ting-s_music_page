@@ -565,18 +565,22 @@ const MusicData = {
     },
 
     _seedZzCeremonySongs() {
-        const migrationKey = 'musicbox_z_z_ceremony_seed_v1';
+        const migrationKey = 'musicbox_z_z_ceremony_seed_v2';
         if (localStorage.getItem(migrationKey)) return;
 
         try {
             const text = document.getElementById('preset-songs')?.textContent?.trim();
             const presets = text ? JSON.parse(text) : [];
-            const existingIds = new Set(this._songs.map(song => song.id));
+            // 清除上一版使用 s31～s46 的记录及音频缓存，避免和旧上传歌曲共用编号。
+            const previousZzSongs = this._songs.filter(song => song.audioUrl?.startsWith('data/audio2/Z&Z/'));
+            previousZzSongs.forEach(song => FileStorage.delete(song.id));
+            this._songs = this._songs.filter(song => !song.audioUrl?.startsWith('data/audio2/Z&Z/'));
+
             const additions = presets
-                .filter(song => song.audioUrl?.startsWith('data/audio2/Z&Z/') && !existingIds.has(song.id))
+                .filter(song => song.audioUrl?.startsWith('data/audio2/Z&Z/'))
                 .map((song, index) => this._normalizeSong(song, this._songs.length + index));
 
-            if (additions.length) {
+            if (additions.length > 0) {
                 this._songs.push(...additions);
                 this._saveToLocal();
             }
