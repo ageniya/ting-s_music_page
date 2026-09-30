@@ -305,10 +305,8 @@ const MusicData = {
 
     /** 带进度回调的音频下载：优先 fetch 流式读取，回退 XHR progress */
     async _fetchAudioWithProgress(url, onProgress) {
-        // 编码 URL 中的特殊字符（#、空格等），防止被浏览器解析为锚点
-        const safeUrl = url.split('/').map((part, i, arr) =>
-            i === arr.length - 1 ? encodeURIComponent(part) : part
-        ).join('/');
+        // 对每一级路径统一编码，兼容中文目录、Z&Z、空格、括号等文件名。
+        const safeUrl = url.split('/').map(part => encodeURIComponent(part)).join('/');
 
         // 方式 1：fetch + ReadableStream 获取下载进度
         try {
