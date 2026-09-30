@@ -265,7 +265,6 @@ const MusicData = {
             // 标记只执行一次，之后用户自行删除的歌曲不会在每次刷新时被重新加回。
             this._seedZzCeremonySongs();
             console.log(`从本地恢复了 ${this._songs.length} 首歌曲`);
-            this._preloadAudioFiles();
             return true;
         }
 
@@ -276,7 +275,6 @@ const MusicData = {
                 const data = JSON.parse(el.textContent.trim());
                 this._songs = data.map((s, i) => this._normalizeSong(s, i));
                 console.log(`从内嵌数据加载了 ${this._songs.length} 首歌曲`);
-                this._preloadAudioFiles();
                 return true;
             }
         } catch (e) { console.warn('内嵌数据解析失败:', e.message); }
@@ -287,7 +285,6 @@ const MusicData = {
             if (resp.ok) {
                 const data = await resp.json();
                 this._songs = data.map((s, i) => this._normalizeSong(s, i));
-                this._preloadAudioFiles();
                 return true;
             }
         } catch (e) { console.warn('加载音乐库失败:', e.message); }
