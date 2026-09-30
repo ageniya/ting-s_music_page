@@ -1412,18 +1412,20 @@ const App = {
     _playLibrarySong(songId) {
         const song = MusicData.getSongById(songId);
         if (!song) return;
-        this._ensureAudio(song, () => {
-            // 播放列表 = 当前搜索范围内所有有音频的歌（不再依赖已删除的筛选下拉框）
-            const searchInput = document.getElementById('searchInput');
-            const query = (searchInput ? searchInput.value : '').toLowerCase().trim();
-            const allSongs = MusicData.getAllSongs().filter(s => {
-                if (query && !s.title.toLowerCase().includes(query)) return false;
-                return FileStorage.has(s.id) || s.audioUrl;
-            });
-            this.player.playlist = allSongs;
-            this.player.currentIndex = allSongs.findIndex(s => s.id === songId);
-            this._loadAndPlay(song);
+        // 播放列表 = 当前搜索范围内所有有音频的歌（不再依赖已删除的筛选下拉框）
+        const searchInput = document.getElementById('searchInput');
+        const query = (searchInput ? searchInput.value : '').toLowerCase().trim();
+        const allSongs = MusicData.getAllSongs().filter(s => {
+            if (query && !s.title.toLowerCase().includes(query)) return false;
+            return FileStorage.has(s.id) || s.audioUrl;
         });
+        this.player.playlist = allSongs;
+        this.player.currentIndex = allSongs.findIndex(s => s.id === songId);
+
+        // 有缓存则直接使用；没有缓存时走原生流式播放，无需等待整首下载。
+        if (FileStorage.has(song.id)) this._loadAndPlay(song);
+        else if (song.audioUrl) this._loadAndPlayUrl(this._audioStreamUrl(song.audioUrl), song);
+        else this._toast('该歌曲没有音频文件', 'error');
     },
 
     _playRandomSong() {
